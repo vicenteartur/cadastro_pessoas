@@ -8,8 +8,8 @@ namespace Cadastro_Pessoas.Interface
 {
     interface IColaboradorViewModel
     {
-        Task<TbColaborador> MontarAdmin(int id);
-        Task<ColaboradorViewModel> MontarColaborador(int CodigoAdministrador, TbColaborador colaborador);
+        
+        Task<ColaboradorViewModel> MontarColaborador(int Codigo);
         Task<List<SelectListItem>> ListaCargos(int CodigoAdministrador, int CodigoCargo);
         Task<TbColaborador> localizaColaborador(int codigo);
         Task<List<ColaboradorViewModel>> ColaboradorAtivo(int CodigoAdministrador);
