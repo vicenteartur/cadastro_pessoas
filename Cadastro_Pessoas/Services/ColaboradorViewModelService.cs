@@ -35,8 +35,6 @@ namespace Cadastro_Pessoas.Services
             return colaborador;
         }
 
-        
-
         public async Task<List<SelectListItem>> ListaCargos(int CodigoAdministrador, int CodigoCargo)
         {
 
@@ -104,10 +102,7 @@ namespace Cadastro_Pessoas.Services
                 return lista;
             }
         }
-
         
-        
-
         public async Task<ColaboradorViewModel> MontarColaborador(int CodigoAdministrador, TbColaborador colaborador)
         {
             if (colaborador == null)
@@ -159,20 +154,16 @@ namespace Cadastro_Pessoas.Services
             }
         }
 
-        public async Task<List<ColaboradorViewModel>> ColaboradorAtivo(int CodigoAdministrador, int CodigoEscola)
+        public async Task<List<ColaboradorViewModel>> ColaboradorAtivo(int CodigoAdministrador, TbColaborador admin)
         {
 
-            var admin = await (from ad in db.TbColaboradors
-                               join cgad in db.TbCargos
-                               on ad.CodigoCargo equals cgad.Codigo
-                               where ad.Codigo == CodigoAdministrador
-                               select cgad.NiveldeAcesso).FirstAsync();
+           
 
 
             var consulta = await (from c in db.TbColaboradors
                                   join cg in db.TbCargos
                                   on c.CodigoCargo equals cg.Codigo
-                                  where c.Ativo != 0 && cg.NiveldeAcesso <= admin
+                                  where c.Ativo != 0 && cg.NiveldeAcesso <= admin.CodigoCargoNavigation.NiveldeAcesso
                                   select new ColaboradorViewModel { 
                                       Codigo = c.Codigo, 
                                       Nome = c.Nome, 
@@ -185,7 +176,7 @@ namespace Cadastro_Pessoas.Services
             return consulta;
         }
 
-        public async Task<List<TbColaborador>> ColaboradorInativo(int CodigoAdministrador, int CodigoEscola)
+        public async Task<List<TbColaborador>> ColaboradorInativo(int CodigoAdministrador)
         {
             var admin = await (from ad in db.TbColaboradors
                                join cgad in db.TbCargos
@@ -202,8 +193,6 @@ namespace Cadastro_Pessoas.Services
 
             return consulta;
         }
-
-        
 
         public async Task InserirColaborador(ColaboradorViewModel colaborador)
         {
@@ -246,46 +235,7 @@ namespace Cadastro_Pessoas.Services
 
         public async Task RemoverColaborador(ColaboradorViewModel colaborador)
         {
-            var criterioavdeletar = new List<TbCriterioAvaliado>();
-            var avaliacaodeletar = new List<TbAvaliacao>();
-            var atribturmadeletar = new List<TbAtribuicaoComponenteCurricularAnoColaboradorEscola>();
-            var atribdeletar = await db.TbAtribuicaoColaboradorEscolas.Where(at => at.CodigoColaborador == colaborador.Codigo).AsNoTracking().ToListAsync();
-
-            foreach (var item in atribdeletar)
-            {
-                var atribturmaaux = await db.TbAtribuicaoComponenteCurricularAnoColaboradorEscolas.Where(att => att.CodigoAtribuicaoColaboradorEscola == item.Codigo).AsNoTracking().ToListAsync();
-                foreach (var itemaux in atribturmaaux)
-                {
-                    atribturmadeletar.Add(itemaux);
-                }
-            }
-
-            foreach (var item in atribturmadeletar)
-            {
-                var atribturmadeletaraux = await db.TbAvaliacaos.Where(att => att.CodigoAtribuicaoComponenteCurricularAnoColaboradorEscola == item.Codigo).AsNoTracking().ToListAsync();
-                foreach (var itemaux in atribturmadeletaraux)
-                {
-                    avaliacaodeletar.Add(itemaux);
-                }
-            }
-
-            foreach (var item in avaliacaodeletar)
-            {
-                var criteriodeletaraux = await db.TbCriterioAvaliados.Where(ca => ca.CodigoAvaliacao == item.Codigo).AsNoTracking().ToListAsync();
-                foreach (var itemaux in criteriodeletaraux)
-                {
-                    criterioavdeletar.Add(itemaux);
-                }
-            }
-
-            await db.BulkDeleteAsync(criterioavdeletar);
-            await db.SaveChangesAsync();
-            await db.BulkDeleteAsync(avaliacaodeletar);
-            await db.SaveChangesAsync();
-            await db.BulkDeleteAsync(atribturmadeletar);
-            await db.SaveChangesAsync();
-            await db.BulkDeleteAsync(atribdeletar);
-            await db.SaveChangesAsync();
+            
             var remover_colab = await db.TbColaboradors.Where(c => c.Codigo == colaborador.Codigo).FirstAsync();
 
             db.TbColaboradors.Remove(remover_colab);
@@ -309,23 +259,6 @@ namespace Cadastro_Pessoas.Services
             await db.SaveChangesAsync();
         }
 
-        public async Task AtribuirColaboradorEstendido(int Colaborador, int Escola)
-        {
-
-
-            var atribuicao = new TbAtribuicaoColaboradorEscola()
-            {
-                CodigoColaborador = Colaborador,
-                CodigoEscola = Escola,
-                Ativa = 1
-            };
-
-
-            await db.TbAtribuicaoColaboradorEscolas.AddAsync(atribuicao);
-            await db.SaveChangesAsync();
-
-        }
-
         public async Task InativarColaborador(ColaboradorViewModel colaborador)
         {
             var col = new TbColaborador()
@@ -341,5 +274,6 @@ namespace Cadastro_Pessoas.Services
             await db.SaveChangesAsync();
         }
 
+        
     }
 }
