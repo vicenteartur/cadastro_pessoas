@@ -19,8 +19,8 @@ namespace Cadastro_Pessoas.Services
 
         public async Task<TbColaborador> MontarAdmin(int id)
         {
-            var tbcolaborador = await db.TbColaboradors.Include(c => c.CodigoCargoNavigation)
-                .FirstOrDefaultAsync(m => m.Codigo == id);
+            var tbcolaborador = await db.TbColaboradors.Include(c => c.CodigoCargoNavigation).Where(m => m.Codigo == id)
+                .FirstOrDefaultAsync();
 
             return tbcolaborador;
         }
@@ -103,12 +103,12 @@ namespace Cadastro_Pessoas.Services
             }
         }
         
-        public async Task<ColaboradorViewModel> MontarColaborador(int CodigoAdministrador, TbColaborador colaborador)
+        public async Task<ColaboradorViewModel> MontarColaborador(int? Codigo, TbColaborador admin)
         {
-            if (colaborador == null)
+            if (Codigo == null)
             {
 
-                var cargo = await ListaCargos(CodigoAdministrador, 0);
+                var cargo = await ListaCargos(admin.Codigo, 0);
                 
 
                 var consulta = await (from col in db.TbColaboradors
@@ -116,10 +116,10 @@ namespace Cadastro_Pessoas.Services
                                       on col.CodigoCargo equals cg.Codigo
                                       select new ColaboradorViewModel
                                       {
-                                          CodigoAdministrador = col.Codigo,
-                                          NomeAdministrador = col.Nome,
-                                          CodigoCargoAdministrador = Convert.ToInt32(col.CodigoCargo),
-                                          CargoAdministrador = cg.Cargo,
+                                          CodigoAdministrador = admin.Codigo,
+                                          NomeAdministrador = admin.Nome,
+                                          CodigoCargoAdministrador = Convert.ToInt32(admin.CodigoCargo),
+                                          CargoAdministrador = admin.CodigoCargoNavigation.Cargo,
                                           cargo = cargo
                                           
                                       }).FirstAsync();
@@ -130,23 +130,27 @@ namespace Cadastro_Pessoas.Services
             else
             {
 
-                var cargo = await ListaCargos(CodigoAdministrador, (int)colaborador.CodigoCargo);
+                var cargo = await ListaCargos(admin.Codigo, (int)Codigo);
                 
 
                 var consulta = (from c in db.TbColaboradors
                                 join cg in db.TbCargos
                                 on c.CodigoCargo equals cg.Codigo
-                                
+                                where c.Codigo == (int)Codigo
                                 select new ColaboradorViewModel
                                 {
-                                    Codigo = colaborador.Codigo,
-                                    Nome = colaborador.Nome,
-                                    Email = colaborador.Email,
-                                    Ativo = colaborador.Ativo,
-                                    CodigoCargo = Convert.ToInt32(colaborador.CodigoCargo),
-                                    Cargo = colaborador.CodigoCargoNavigation.Cargo,
-                                    NiveldeAcesso = colaborador.CodigoCargoNavigation.NiveldeAcesso
-                                    
+                                    Codigo = c.Codigo,
+                                    Nome = c.Nome,
+                                    Email = c.Email,
+                                    Ativo = c.Ativo,
+                                    CodigoCargo = Convert.ToInt32(c.CodigoCargo),
+                                    Cargo = c.CodigoCargoNavigation.Cargo,
+                                    NiveldeAcesso = c.CodigoCargoNavigation.NiveldeAcesso,
+                                    CodigoAdministrador = admin.Codigo,
+                                    NomeAdministrador = admin.Nome,
+                                    CodigoCargoAdministrador = Convert.ToInt32(admin.CodigoCargo),
+                                    CargoAdministrador = admin.CodigoCargoNavigation.Cargo,
+                                    cargo = cargo
                                 }).FirstAsync();
 
 
@@ -154,7 +158,7 @@ namespace Cadastro_Pessoas.Services
             }
         }
 
-        public async Task<List<ColaboradorViewModel>> ColaboradorAtivo(int CodigoAdministrador, TbColaborador admin)
+        public async Task<List<ColaboradorViewModel>> ColaboradorAtivo(TbColaborador admin)
         {
 
            
@@ -170,7 +174,7 @@ namespace Cadastro_Pessoas.Services
                                       Email = c.Email, 
                                       Cargo = cg.Cargo, 
                                       Ativo = c.Ativo, 
-                                      CodigoAdministrador = CodigoAdministrador
+                                      CodigoAdministrador = admin.Codigo
                                       }).ToListAsync();
 
             return consulta;

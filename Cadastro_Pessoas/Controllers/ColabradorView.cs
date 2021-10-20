@@ -24,10 +24,11 @@ namespace AcompanhamentoDocente.Controllers
         // GET: ColaboradorViewController
         public async Task<ActionResult> Index(int id)
         {
+            var admin = await _colabview.MontarAdmin(id);
+            ViewData["admin"] = admin;
             var model = new List<ColaboradorViewModel>();
-            model = await _colabview.ColaboradorAtivo(id);
-            var col = await _colabview.MontarAdmin(id);
-            ViewData["admin"] = col;
+            model = await _colabview.ColaboradorAtivo(admin);
+            
             return View(model);
         }
 
@@ -43,9 +44,10 @@ namespace AcompanhamentoDocente.Controllers
         // GET: ColaboradorViewController/Create
         public async Task<ActionResult> Create(int id, int esc)
         {
-            ViewData["admin"] = await _colabview.MontarAdmin(id);
+            var admin = await _colabview.MontarAdmin(id);
+            ViewData["admin"] = admin;
             
-            return View(await _colabview.MontarColaborador(id, esc, null));
+            return View(await _colabview.MontarColaborador(id, admin));
         }
 
         // POST: ColaboradorViewController/Create
@@ -128,25 +130,28 @@ namespace AcompanhamentoDocente.Controllers
         public async Task<IActionResult> Delete(int id, int esc, int col)
         {
             var colaborador = await _colabview.localizaColaborador(col);
-            ViewData["admin"] = await _colabview.MontarAdmin(id);
+            var admin = await _colabview.MontarAdmin(id);
+            ViewData["admin"] = admin;
             
-            return View(await _colabview.MontarColaborador(id, esc, colaborador));
+            return View(await _colabview.MontarColaborador(id, admin));
         }
 
         // POST: ColaboradorViewController/Delete/5
         [HttpPost]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed([Bind("Codigo,Nome,Email,Ativo,CodigoCargo,Cargo,CodigoEscola,CodigoAdministrador")] ColaboradorViewModel colaborador)
+        public async Task<IActionResult> DeleteConfirmed([Bind("Codigo,Nome,Email,Ativo,CodigoCargo,Cargo,CodigoAdministrador")] ColaboradorViewModel colaborador)
         {
             try
             {
 
                 var removercolab = await _colabview.localizaColaborador(colaborador.Codigo);
-                var montarremovido = await _colabview.MontarColaborador(colaborador.CodigoAdministrador, colaborador.CodigoEscola, removercolab);
-                await _colabview.RemoverColaborador(montarremovido);
+                var admin = await _colabview.MontarAdmin(colaborador.CodigoAdministrador);
 
-                return RedirectToAction("Index", new { id = colaborador.CodigoAdministrador, esc = colaborador.CodigoEscola });
+                await _colabview.RemoverColaborador(colaborador);
+                
+
+                return RedirectToAction("Index", new { id = colaborador.CodigoAdministrador});
             }
             catch (Exception ex)
             {
