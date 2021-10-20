@@ -53,9 +53,9 @@ namespace AcompanhamentoDocente.Controllers
         // POST: ColaboradorViewController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int? id, [Bind("Codigo,Nome,Email,Ativo,CodigoCargo,Cargo,CodigoEscola,CodigoAdministrador")] ColaboradorViewModel colaborador)
+        public async Task<IActionResult> Create(int? id, [Bind("Codigo,Nome,Email,Ativo,CodigoCargo,Cargo,CodigoAdministrador")] ColaboradorViewModel colaborador)
         {
-            int esc = colaborador.CodigoEscola;
+            
 
             if (ModelState.IsValid)
             {
@@ -63,7 +63,7 @@ namespace AcompanhamentoDocente.Controllers
                 try
                 {
                     await _colabview.InserirColaborador(colaborador);
-                    return RedirectToAction("Index", new { id = id, esc });
+                    return RedirectToAction("Index", new { id = id});
 
                 }
                 catch (DbUpdateConcurrencyException)

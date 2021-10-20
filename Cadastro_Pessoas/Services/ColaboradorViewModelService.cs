@@ -31,7 +31,7 @@ namespace Cadastro_Pessoas.Services
 
         public async Task<TbColaborador> localizaColaborador(int codigo)
         {
-            var colaborador = await db.TbColaboradors.FindAsync(codigo);
+            var colaborador = await db.TbColaboradors.Include(c => c.CodigoCargoNavigation).Where(c => c.Codigo == codigo).FirstOrDefaultAsync();
             return colaborador;
         }
 
